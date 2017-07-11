@@ -10,6 +10,9 @@ WMI interface for PHP.
 AUTHOR
 Christian Vigh, 11/2015.
 
+COLLABORATOR, 2017/07/11.
+David Tavarez,
+
 HISTORY
 [Version : 1.0]    [Date : 2014/11/14]     [Author : CV]
 Initial version.
@@ -20,6 +23,9 @@ WMI class being implemented.
 
 [Version : 1.1.1]    [Date : 2016/10/24]     [Author : CV]
 . The ArrayAccess interface of the WmiInstance class was incorrectly handled.
+
+[Version : 1.2.1]    [Date : 2017/07/11]     [Author : DT]
+. Fixing class generation.
 
 **************************************************************************************************************/
 
@@ -228,7 +234,6 @@ class Wmi
 
     // __create_class -
     //    Creates a class on-the-fly mapped to a query result.
-
     private function __create_class($row, $class, $base, $namespace)
     {
         $namespace = ($namespace) ? "namespace $namespace ;" : '';
@@ -274,15 +279,12 @@ END;
         }
 
         // Build method text
-
         foreach ($methods as $method) {
 
             // Function header
-
             $classtext .= "\n\n\tpublic function  {$method['name']} ( ";
 
             // Function arguments
-
             $list = array();
             foreach ($method['parameters'] as $parameter) {
                 if ($parameter['out'])
@@ -295,15 +297,14 @@ END;
             $classtext .= implode(', ', $list) . " )\n\t   {\n";
 
             // Create a variant for each OUT parameter
-
             foreach ($method['parameters'] as $parameter) {
-                if ($parameter['out'])
-                    $classtext .= "\t\t\$vt_{$parameter['name']}"; #@%+=FEFGT6R3987EFDF86347GR=+%@#"=  new \VARIANT ( ) ;\n";
+                if ($parameter['out']) {
+                    $classtext .= "\t\t\$vt_{$parameter['name']};\n"; #@%+=FEFGT6R3987EFDF86347GR=+%@#"=  new \VARIANT ( ) ;\n";
+                }
             }
 
             // Call the underlying COM function
-
-            $classtext .= "\n\t\t\$__result__"; #@%+=FEFGT6R3987EFDF86347GR=+%@#"=  \$this -> WmiRow -> {$method['name']} ( ";
+            $classtext .= "\n\t\t\$__result__( "; #@%+=FEFGT6R3987EFDF86347GR=+%@#"=  \$this -> WmiRow -> {$method['name']} ( ";
             $list = array();
             foreach ($method['parameters'] as $parameter) {
                 if ($parameter['out'])
@@ -316,24 +317,22 @@ END;
             $classtext .= implode(', ', $list) . " ) ;\n\n";
 
             // Convert OUT parameters from variant to PHP data
-
             foreach ($method['parameters'] as $parameter) {
                 if ($parameter['out'])
-                    $classtext .= "\t\t\${$parameter['name']}"; #@%+=FEFGT6R3987EFDF86347GR=+%@#"= Wmi::FromVariant ( \$vt_{$parameter['name']} ) ;\n";
+                    $classtext .= "\t\t\${$parameter['name']};"; #@%+=FEFGT6R3987EFDF86347GR=+%@#"= Wmi::FromVariant ( \$vt_{$parameter['name']} ) ;\n";
             }
 
             $classtext .= "\n";
 
             // If method returns a value then convert it
-
             if ($method['has-result'])
                 $classtext .= "\t\treturn ( Wmi::FromVariant ( \$__result__ ) ) ;\n";
             $classtext .= "\t    }\n";
         }
 
         // Create the class
-
         $classtext = $classtext . "\n    }";
+
         eval($classtext);
     }
 
