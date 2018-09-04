@@ -1,0 +1,10 @@
+theme: jekyll-theme-slate
+title: WMI.class.php
+
+author: christian-vigh-phpclasses
+
+description: > 
+  Wrapper around the WMI COM object.
+  
+plugins:
+ - jekyll-seo-tag
